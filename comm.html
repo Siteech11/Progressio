@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" 
+    integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <link rel="stylesheet" src="javascript/main.js">
+    <link rel="stylesheet" src="css/style2.css">
+    <!-- Optional JavaScript; choose one of the two! -->
+    <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
+
+    <!-- Option 2: Separate Popper and Bootstrap JS -->
+    
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js" integrity="sha384-+sLIOodYLS7CIrQpBjl+C7nPvqq+FbNUBDunl/OZv93DB7Ln/533i8e/mZXLi/P+" crossorigin="anonymous"></script>
+    <script>
+        function getCardElement(itemName, itemPrice){
+          var newCard = '<div class ="card bg-light">'             +
+                        '<div class ="card-body text-center">'     +
+                        '<h2 class="card-text">'                   +
+                        itemName                                   +
+                        '</h2>'                                    +
+                        '<img src="iage2/'                         +
+                        itemName                                   +
+                        '.png">'                                   +
+                        '<h5>$'                                    +
+                        itemPrice                                  +
+                        '</h5>'                                    +
+                        '<div class="cart-buttons">'               +
+                        '<i class="fas fa-minus-square fa-2x"></i>'        +
+                        '<span class="qty"> Qty: '                 +
+                        '<span class="qty-value"> 0 </span>'       +
+                        '</span>'                                  +
+                        '<i class="fas fa-plus-square fa-2x"></i>'         +
+                        '</div>'                                   +
+                        '</div>'                                   +
+                        '</div>';
+          return newCard;
+        }
+        function filterCards(){
+          var searchTerm = $(this).val().toLowerCase();
+          $("#item .card").each(function(){
+            var cardContent = $(this).find('h2.card-text').text().toLowerCase();
+            var searchMatch = cardContent.indexOf(searchTerm) > -1;
+            $(this).toggle(searchMatch);
+          });
+        }
+        function addHighlight(){
+          $(this).removeClass("bg-light");
+          $(this).addClass("text-white bg-info");
+        }
+        function removeHighlight(){
+          $(this).removeClass("text-white bg-info");
+          $(this).addClass("bg-light");
+        }
+        function addCartItem(){
+          var quantityHolder = $(this).parent('.cart-buttons').find('.qty-value').first();
+          var currentQty = parseInt(quantityHolder.text());
+          var newQty = currentQty + 1;
+          console.log(newQty);
+          quantityHolder.html(newQty);
+        }
+        function removeCartItem(){
+          var quantityHolder = $(this).parent('.cart-buttons').find('.qty-value').first();
+          var currentQty = parseInt(quantityHolder.text());
+          var newQty = Math.max(currentQty - 1, 0);
+          quantityHolder.html(newQty);
+        }
+        function checkoutCart(){
+          var receipt = {};
+          receipt["totalCost"] = 0;
+
+          var foodItemsContainer = $(this).parents('body').find('#');
+          foodItemsContainer.find('.card').each(function(){
+            var itemName = $(this).find('h2.card-text').text();
+            var itemPriceString = $(this).find('h5').text().replace("$", "#item");
+            var itemPriceInt = parseInt(itemPriceString);
+            var itemQtyString = $(this).find('.qty-value').text();
+            var itemQtyInt = parseInt(itemQtyString);
+            var itemCost = itemPriceInt*itemQtyInt;
+            if(itemCost > 0){
+              receipt[itemName] = itemQtyInt;
+              receipt["totalCost"] += itemCost;
+            }
+          });
+          console.log(receipt);
+
+          var message = "Confirm and proceed to payment";
+          message += "\n Total cost: " + receipt["totalCost"];
+          for (var itemName in receipt) {
+            if(itemName == "totalCost"){
+              continue;
+            }
+
+            var itemQtyString = receipt[itemName];
+            message += "\n" + itemQtyString + "x   " + itemName;
+          }
+          var response = confirm(message);
+          if(response==true){
+            console.log("Proceeding to payment");
+            sessionStorage.setItem("totalCost", receipt["totalCost"]);
+            window.location.replace('payment.html')
+          }
+        }
+        $(document).ready(function(){
+          var item = JSON.parse(ListofItem);
+          var list = item.items;
+          for (i = 0; i < list.length; i++){
+            var object = list[i];
+            console.log(object);
+            // add card for object 
+            var itemName = object.name;
+            var itemPrice = object.price;
+            var newCard = getCardElement(itemName, itemPrice);
+            $('#item').append(newCard);
+          }
+          $('#search-bar').on("keyup", filterCards);
+          $("#item .card").hover(addHighlight, removeHighlight);
+          $('#item .card .fa-minus-square').click(removeCartItem);
+          $('#item .card .fa-plus-square').click(addCartItem);
+          $('.checkout #checkout-btn').click(checkoutCart);
+        });
+      </script>
+  </head>
+  <body>
+    <!-- Jumbotron -->
+    <div class="jumbotron jumbotron-fluid">
+        <div class="container">
+          <div class="row">
+            <div class="col-8">
+              <h1>Online Store</h1>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <input class="body-container" id="search-bar" type="text" placeholder="Search for something...">
+
+      <!-- Cards -->
+      <div class="card-columns body-container" id="item">
+
+      </div>
+
+      <!--Checkout-->
+      <div class="checkout">
+        <a href="payment.html">
+            <button type="button" class="btn btn-warning btn-block"
+                id="checkout-btn">Checkout
+            </button>
+        </a>
+      </div>
+  </body>
+</html>
